@@ -11,3 +11,6 @@ f
 6src/test/java/com/adventofcode/day1/TrebuchetTest.java,6\a\6a98a69aae92996487184d26e31b71596a4c4d3d
 Y
 )src/main/java/com/adventofcode/Utils.java,5\1\51b1e54fb0be93a90ba370ce31f5ec69b89fc8f0
+:
+
+.gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302

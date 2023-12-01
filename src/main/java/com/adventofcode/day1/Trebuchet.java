@@ -2,9 +2,25 @@ package com.adventofcode.day1;
 
 import com.adventofcode.Utils;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Trebuchet {
+
+    private static final Map<String, String> spelledDigitsToDigits = new HashMap<>();
+
+    static {
+        spelledDigitsToDigits.put("one", "1");
+        spelledDigitsToDigits.put("two", "2");
+        spelledDigitsToDigits.put("three", "3");
+        spelledDigitsToDigits.put("four", "4");
+        spelledDigitsToDigits.put("five", "5");
+        spelledDigitsToDigits.put("six", "6");
+        spelledDigitsToDigits.put("seven", "7");
+        spelledDigitsToDigits.put("eight", "8");
+        spelledDigitsToDigits.put("nine", "9");
+    }
 
     public static void main(String[] args) {
         String fileName = "day1_trebuchet_input.txt";
@@ -30,6 +46,7 @@ public class Trebuchet {
     }
 
     private static String parseDigits(String s) {
+        s = convertSpelledDigitsToDigits(s);
         StringBuilder digits = new StringBuilder();
         var pattern = Pattern.compile("\\d");
         var matcher = pattern.matcher(s);
@@ -37,5 +54,18 @@ public class Trebuchet {
             digits.append(matcher.group());
         }
         return digits.toString();
+    }
+
+    private static String convertSpelledDigitsToDigits(String s) {
+        for (String key : spelledDigitsToDigits.keySet()) {
+            var pattern = Pattern.compile(key);
+            var matcher = pattern.matcher(s);
+            while (matcher.find()) {
+                var group = matcher.group();
+                var i = s.indexOf(group);
+                s = s.substring(0, ++i) + spelledDigitsToDigits.get(key) + s.substring(i);
+            }
+        }
+        return s;
     }
 }
