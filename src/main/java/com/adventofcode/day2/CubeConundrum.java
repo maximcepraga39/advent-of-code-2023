@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CubeConundrum {
     @SuppressWarnings("unused")
@@ -30,7 +31,33 @@ public class CubeConundrum {
         var games = parseInput(input);
 
         var gameResult = checkPossibleGames(games);
-        System.out.println(gameResult);
+        System.out.println("Part 1 result: " + gameResult);
+
+        var gameResultPartTwo = sumOfPowerOfFewestSets(games);
+        System.out.println("Part 2 result: " + gameResultPartTwo);
+    }
+
+    private static int sumOfPowerOfFewestSets(Map<String, List<Map<String, Integer>>> games) {
+        return games.values().stream()
+                .map(CubeConundrum::powerOfFewestSets)
+                .reduce(0, Integer::sum);
+    }
+
+    private static int powerOfFewestSets(List<Map<String, Integer>> gameSubsets) {
+        var maxRed = new AtomicInteger();
+        var maxGreen = new AtomicInteger();
+        var maxBlue = new AtomicInteger();
+        gameSubsets.forEach(gameSubset -> {
+                    var redCubesCount = gameSubset.getOrDefault(RED_CUBE_NAME, 1);
+                    var greenCubesCount = gameSubset.getOrDefault(GREEN_CUBE_NAME, 1);
+                    var blueCubesCount = gameSubset.getOrDefault(BLUE_CUBE_NAME, 1);
+
+                    maxRed.set(Math.max(maxRed.get(), redCubesCount));
+                    maxGreen.set(Math.max(maxGreen.get(), greenCubesCount));
+                    maxBlue.set(Math.max(maxBlue.get(), blueCubesCount));
+                });
+
+        return maxRed.get() * maxGreen.get() * maxBlue.get();
     }
 
     private static int checkPossibleGames(Map<String, List<Map<String, Integer>>> games) {
