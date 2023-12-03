@@ -2,9 +2,13 @@ package com.adventofcode.day3;
 
 import com.adventofcode.Utils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class GearRatios {
     private static final String TEST_INPUT = """
@@ -19,14 +23,69 @@ public class GearRatios {
             ...$.*....
             .664.598..""";
 
+    private static final Map<Coordinates, List<Integer>> gearRatio = new HashMap<>();
+
 
     public static void main(String[] args) {
         var inputText = Utils.readFileFromResources("day3_gear_ratios_input.txt");
+//        var inputText = TEST_INPUT;
 
         Map<Coordinates, String> numberCoords = parseInput(inputText, true);
         Map<Coordinates, String> symCoords = parseInput(inputText, false);
 
         System.out.println(checkGearRatios(numberCoords, symCoords));
+
+        System.out.println(part2(numberCoords, symCoords));
+    }
+
+    private static Integer part2(Map<Coordinates, String> numberCoords, Map<Coordinates, String> symCoords) {
+        var gearMap = symCoords.entrySet().stream()
+                .filter(entry -> entry.getValue().equals("*"))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        numberCoords.forEach((key, number) -> {
+            var numberCoord = (NumberCoordinates) key;
+            isAdjacentToSymbol1(numberCoord, number, gearMap);
+        });
+
+        return gearRatio.values().stream()
+                .filter(numbers -> numbers.size() > 1)
+                .map(gears -> gears.stream().reduce(1, (a, b) -> a * b))
+                .reduce(0, Integer::sum);
+    }
+
+    private static void isAdjacentToSymbol1(NumberCoordinates numberCoordinates, String number, Map<Coordinates, String> symCoords) {
+        AtomicBoolean isAdjacentToSymbol = new AtomicBoolean(false);
+        var numberLineIndex = numberCoordinates.getLineIndex();
+        var numberCharIndex = numberCoordinates.getCharIndex();
+        var numberLength = numberCoordinates.getLength();
+
+        var previousCharSymCoords = new Coordinates(numberLineIndex, numberCharIndex - 1);
+        var nextCharSymCoords = new Coordinates(numberLineIndex, numberCharIndex + numberLength);
+        var previousLineSymCoords = generateSymCoordsForNextLine(numberCoordinates, -1);
+        var nextLineSymCoords = generateSymCoordsForNextLine(numberCoordinates, 1);
+
+        var symCoordsToCheck = new ArrayList<Coordinates>();
+        symCoordsToCheck.add(previousCharSymCoords);
+        symCoordsToCheck.add(nextCharSymCoords);
+        symCoordsToCheck.addAll(previousLineSymCoords);
+        symCoordsToCheck.addAll(nextLineSymCoords);
+        symCoords.forEach((key, val) -> {
+            symCoordsToCheck
+                    .forEach(e -> {
+                        if (!isAdjacentToSymbol.get()) {
+                            isAdjacentToSymbol.set(e.getLineIndex() == key.getLineIndex() &&
+                                    e.getCharIndex() == key.getCharIndex());
+                            var isAdjacent = isAdjacentToSymbol.get();
+
+                            if (isAdjacent) {
+                                var numbers = gearRatio.getOrDefault(key, new ArrayList<>());
+                                numbers.add(Integer.parseInt(number));
+                                gearRatio.put(key, numbers);
+                            }
+                        }
+                    });
+        });
     }
 
     private static Integer checkGearRatios(Map<Coordinates, String> numberCoords, Map<Coordinates, String> symCoords) {
@@ -185,30 +244,5 @@ class NumberCoordinates extends Coordinates {
                 ",\tcharIndex=" + charIndex +
                 ",\tlength=" + length +
                 '}';
-    }
-}
-
-class PrettyPrintingMap<K, V> {
-    private Map<K, V> map;
-
-    public PrettyPrintingMap(Map<K, V> map) {
-        this.map = map;
-    }
-
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry<K, V> entry = iter.next();
-            sb.append(entry.getKey());
-            sb.append("\t=\t").append("\"");
-            sb.append(entry.getValue());
-            sb.append('"');
-            if (iter.hasNext()) {
-                sb.append(',').append('\n');
-            }
-        }
-        return sb.toString();
-
     }
 }
