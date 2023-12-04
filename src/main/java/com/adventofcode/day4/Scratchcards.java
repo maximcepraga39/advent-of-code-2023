@@ -3,9 +3,7 @@ package com.adventofcode.day4;
 import com.adventofcode.Utils;
 import com.google.common.primitives.Ints;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /*
@@ -31,6 +29,27 @@ public class Scratchcards {
                 .reduce(0L, Long::sum);
 
         System.out.println(pointsTotal);
+
+        Map<Integer, Integer> cardInstances = new HashMap<>();
+
+        var sortedCards = cards.stream().sorted().collect(Collectors.toCollection(LinkedHashSet::new));
+        for (Card card : sortedCards) {
+            var matchingNumbersCount = card.matchingNumbersCount();
+            var cardId = card.getCardId();
+            var currentCardCount = cardInstances.getOrDefault(cardId, 0);
+            cardInstances.put(cardId, ++currentCardCount);
+            for (int i = cardId + 1; i < cardId + matchingNumbersCount + 1; i++) {
+                var cardCount = cardInstances.getOrDefault(i, 0);
+                cardCount += currentCardCount;
+                cardInstances.put(i, cardCount);
+            }
+        }
+
+        var sum = cardInstances.values().stream()
+                .mapToInt(Integer::valueOf)
+                .sum();
+
+        System.out.println(sum);
     }
 
     private static Set<Card> parseInput(String s) {
@@ -67,7 +86,7 @@ public class Scratchcards {
     }
 }
 
-class Card {
+class Card implements Comparable {
     private final Integer cardId;
     private final Set<Integer> winningNumbers;
     private final Set<Integer> actualNumbers;
@@ -93,6 +112,27 @@ class Card {
         }
 
         return points;
+    }
+
+    public Integer matchingNumbersCount() {
+        var matchingNumbersCount = 0;
+        for (Integer winningNumber : winningNumbers) {
+            if (actualNumbers.contains(winningNumber)) {
+                matchingNumbersCount++;
+            }
+        }
+
+        return matchingNumbersCount;
+    }
+
+    public Integer getCardId() {
+        return cardId;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        var otherCard = (Card) o;
+        return this.getCardId().compareTo(otherCard.getCardId());
     }
 
     @Override
